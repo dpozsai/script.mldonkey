@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="30500">
+		<setting label="30501" type="folder" id="folder" source="auto"/>
+		<setting label="30502" type="folder" id="video_library" source="auto"/>
+		<setting label="30503" type="folder" id="tv_library" source="auto"/>
+		<setting type="sep" />
+		<setting label="30510" id="tipo" type="enum" lvalues="30511|30512|30513|30514|30515"/>
+		<setting label="30516" id="link_filter" type="bool" value="True" enable="gt(-1,1)"/>
+	</category>
+	<category label="30520">
+		<setting label="30521" type="ipaddress" id="MLdonkey_IP" default="127.0.0.1"/>
+		<setting label="30522" type="number" id="MLdonkey_port" default="4000"/>
+		<setting label="30523" type="bool" id="MLdonkey_auth" default="false"/>
+		<setting type="sep" />
+		<setting label="30524" type="text" default="admin" id="MLdonkey_user" enable="!eq(-2,false)"/>
+		<setting label="30525" type="text" option="hidden" id="MLdonkey_passwd" enable="!eq(-3,false)"/>
+	</category>
+</settings>
