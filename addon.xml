@@ -8,6 +8,7 @@ provider-name="Diego del Pozo"
 <requires>
 	<import addon="xbmc.python" version="3.0.0"/>
   <import addon="script.module.pyxbmct" />
+  <import addon="script.module.web-pdb" />
 </requires>
 <extension point="xbmc.python.script"         library="addon.py"/>
  <extension point="xbmc.addon.metadata">
