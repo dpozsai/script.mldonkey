@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import os
 import sys
+import re
 import telnetlib
 
 import xbmc
@@ -234,8 +235,6 @@ class GuiMLdonkey(pyxbmct.AddonDialogWindow):
         window.doModal()
         del window
     """
-    # TODO Implementar mas funciones con boton drecho sobre una fila.
-    # Priorizar pause / delete. Luego cambiar prioridad y obtener info.
     def __init__(self, title=''):
         """[summary]
 
@@ -314,13 +313,16 @@ class GuiMLdonkey(pyxbmct.AddonDialogWindow):
             30081), getLS(30014), getLS(30082), getLS(30083), getLS(30084), getLS(30085), getLS(30086))
 
         self.header.setLabel(label)
-
         for line in downloaded:
             line.strip()
             line = line.partition("m")
             line = line[2]
             if line.startswith("["):
                 line = line.split()
+                match = re.match(r"(\[\w)(\d+\])", line[0], re.I)
+                if match:
+                    line[0]=match.group(1)
+                    line.insert(1, match.group(2))
                 line_size = len(line)
                 MLnetwork = line[0].replace("[", "")
                 MLnumber = line[1].replace("]", "")
@@ -378,22 +380,22 @@ class GuiMLdonkey(pyxbmct.AddonDialogWindow):
             "Pause/Resume",
             "Cancel"
         ]
-        # import web_pdb; web_pdb.set_trace() # DEBUG
         try:
             if self.getFocusId() == self.list.getId():
                 item=self.list.getSelectedItem()
                 MLnumber=item.getProperty('number')
+                MLPriority=int(item.getProperty('Prio'))
+                MLstatus=item.getProperty('Rate')
                 dialog = xbmcgui.Dialog()
                 option = dialog.contextmenu(menu_options)
                 if option == 0: # Info
                     self.MLDonkeyInfo(MLnumber)
                 elif option == 1: # Change Priority
-                    self.MLDonkeyPriority(MLnumber)
+                    self.MLDonkeyPriority(MLnumber, MLPriority)
                 elif option == 2: # Pause/Resume
-                    pass #do_something
+                    self.MLDonkeyPauseResume(MLnumber, MLstatus)
                 elif option == 3: # Cancel
-                    pass #do_something
-            pass
+                    self.MLDonkeyCancel(MLnumber)
         except (RuntimeError):
             pass
 
@@ -418,22 +420,22 @@ class GuiMLdonkey(pyxbmct.AddonDialogWindow):
             MLDk = telnetlib.Telnet(MLServer, MLPort, MLtimeout)
             if MLauth:
                 MLDk.read_until(b"login :")
-                MLDk.write(MLuser.encode('ascii') + b"\n")
+                MLDk.write(MLuser.encode('utf-8') + b"\n")
                 MLDk.read_until(b"Password: ")
-                MLDk.write(MLpass.encode('ascii') + b"\n")
+                MLDk.write(MLpass.encode('utf-8') + b"\n")
             
             MLDk.read_until(b">", 100)
-            MLDk.write(command.encode('ascii') + b"\n")
+            MLDk.write(command.encode('utf-8') + b"\n")
             result = MLDk.read_until(b"MLdonkey command-line", 100)
             MLDk.write(b"exit\n")
-            result = result.decode('utf-8')
+            result = result.decode('utf-8', 'ignore')
         except OSError as error:
             warning=xbmcgui.Dialog().ok("Error", "Host is down or unreachable\nPlease check connections settings")
             #TODO Revisar como poner la información del error
             #TODO Localizar Error
             result=""
         lines = result.split("\n")
-        lines = [line for line in lines if ("MLdonkey command-line" not in line) or ("[36m"+command not in line)]
+        lines = [line for line in lines if ("MLdonkey command-line" not in line) and ("[36m"+command not in line)]
         result = "\n".join(lines)   
         return result
 
@@ -444,13 +446,60 @@ class GuiMLdonkey(pyxbmct.AddonDialogWindow):
         dialog = xbmcgui.Dialog()
         dialog.textviewer("Info", result, True) #TODO Localize Title
 
-    def MLDonkeyPriority(self, number: str):
+    def MLDonkeyPriority(self, number: str, current_priority: int):
         """Change priority
         """
+        priorities = [
+            'Very High', #20
+            'High', #10
+            'Normal', #0
+            'Low', #-10
+            'Very Low', #-20
+        ] #TODO Localize Entries
+        priorities_values = [
+            20,
+            10,
+            0,
+            -10,
+            -20
+        ] #TODO Localize Entries
 
-        result = self.MLdonkey("vd "+number)
         dialog = xbmcgui.Dialog()
-        dialog.textviewer("Info", result, True) #TODO Localize Title
+        priotity_order = dialog.select("Select priority", priorities, 0, 2) #TODO Localize Title
+        priority = priorities_values[priotity_order] - current_priority
+        result = self.MLdonkey("priority "+str(priority)+" "+number)
+        dialog = xbmcgui.Dialog()
+        dialog.ok("Result", result)
+        self.load_list()
+
+    def MLDonkeyPauseResume(self, number:str, current_status: str):
+        """Pause or Unpause download
+        Arguments:
+            number (str): MLDonkey download ID
+            current priority (str): Download rate or paused
+        """
+        if "Paused" in current_status:
+            result = self.MLdonkey("resume "+number)
+        else:
+            result = self.MLdonkey("pause "+number)
+        self.load_list()
+
+
+    def MLDonkeyCancel(self, number: str):
+        """Cancel a download
+        Arguments:
+            number (str): MLDonkey download ID
+        """
+        result = self.MLdonkey("cancel "+number)
+        dialog = xbmcgui.Dialog()
+        cancel = dialog.yesno("Confirm", result) #TODO Localize Title
+        if cancel:
+            result = self.MLdonkey("confirm yes")
+        else:
+            result = self.MLdonkey("confirm no")
+        dialog = xbmcgui.Dialog()
+        dialog.ok("Result", result)
+        self.load_list()
 
     def manage_exceptions(self):
         """Go to Exceptions window.

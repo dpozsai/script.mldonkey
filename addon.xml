@@ -8,7 +8,6 @@ provider-name="Diego del Pozo"
 <requires>
 	<import addon="xbmc.python" version="3.0.0"/>
   <import addon="script.module.pyxbmct" />
-  <import addon="script.module.web-pdb" />
 </requires>
 <extension point="xbmc.python.script"         library="addon.py"/>
  <extension point="xbmc.addon.metadata">
@@ -22,7 +21,7 @@ provider-name="Diego del Pozo"
     <website>https://www.burgaleses.es</website>
     <email></email>
     <source></source>
-    <news>v0.0.7 - Updated to Matrix</news>
+    <news>v0.1.0 - Add MLdonkey basic functions</news>
     <assets>
       <icon>resources/icon.png</icon>
       <fanart>resources/fanart.jpg</fanart>
