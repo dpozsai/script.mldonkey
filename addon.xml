@@ -21,7 +21,7 @@ provider-name="Diego del Pozo"
     <website>https://www.burgaleses.es</website>
     <email></email>
     <source></source>
-    <news>v0.0.7 - Updated to Matrix</news>
+    <news>v0.1.0 - Add MLdonkey basic functions</news>
     <assets>
       <icon>resources/icon.png</icon>
       <fanart>resources/fanart.jpg</fanart>
